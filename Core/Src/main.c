@@ -24,16 +24,42 @@
 #include "usart.h"
 #include "gpio.h"
 
-void test_LDR();
-void test_Laser();
-void test_Buzzer();
-void test_LED();
-void test_Servo();
-void test_ESP8266();
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+/* USER CODE BEGIN PFP */
 
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -41,14 +67,25 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+  /* USER CODE BEGIN 1 */
 
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
   SystemClock_Config();
 
+  /* USER CODE BEGIN SysInit */
 
+  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -56,6 +93,7 @@ int main(void)
   MX_I2C1_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  /* USER CODE BEGIN 2 */
 
   /* Uncomment the test you want to run */
   // test_LDR();
@@ -64,12 +102,17 @@ int main(void)
   // test_LED();
   // test_Servo();
   // test_ESP8266();
+  // test_Button();
+
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* USER CODE END WHILE */
 
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -145,8 +188,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   /* USER CODE END Callback 1 */
 }
+void test_Button() {
+    // Check if PC13 button is pressed (Active LOW)
+    if (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET) {
+        HAL_Delay(50); // Debounce delay
 
+        // Toggle LED (PA5)
+        HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
+        // Wait for button release
+        while (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET);
+        HAL_Delay(50); // Prevent multiple triggers
+    }
+}
 /*Test LDR Sensor (PA0 - ADC1) */
 void test_LDR() {
     uint32_t adcValue;
@@ -156,9 +210,9 @@ void test_LDR() {
     HAL_ADC_Stop(&hadc1);
 
     if (adcValue < 1000) {  // Adjust threshold as needed
-        HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);  // Turn on LED if laser is broken
+        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // Turn on LED if laser is broken
     } else {
-        HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
     }
     HAL_Delay(500);
 }
@@ -177,20 +231,21 @@ void test_Buzzer() {
     HAL_Delay(1000);
 }
 void test_LED() {
-    HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);  // LED ON
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // LED ON
     HAL_Delay(1000);
-    HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_RESET); // LED OFF
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET); // LED OFF
     HAL_Delay(1000);
 }
 void test_Servo() {
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);  // Move to -90°
-    HAL_Delay(2000);
+    HAL_Delay(4000);
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1500); // Move to 0° (neutral)
-    HAL_Delay(2000);
+    HAL_Delay(4000);
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2500); // Move to +90°
     HAL_Delay(2000);
 }
+
 
 /**
   * @brief  This function is executed in case of error occurrence.
