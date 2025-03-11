@@ -47,6 +47,48 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+/* Definitions for the Button Task */
+osThreadId_t TaskButtonHandle;
+const osThreadAttr_t TaskButton_attributes = {
+  .name = "TaskButton",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+/* Definitions for the LDR Task */
+osThreadId_t TaskLDRHandle;
+const osThreadAttr_t TaskLDR_attributes = {
+  .name = "TaskLDR",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+/* Definitions for the Buzzer Task */
+osThreadId_t TaskBuzzerHandle;
+const osThreadAttr_t TaskBuzzer_attributes = {
+  .name = "TaskBuzzer",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+/* Definitions for the LED Task */
+osThreadId_t TaskLedHandle;
+const osThreadAttr_t TaskLed_attributes = {
+  .name = "TaskLed",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+/* Definitions for the Servo Task */
+osThreadId_t TaskServoHandle;
+const osThreadAttr_t TaskServo_attributes = {
+  .name = "TaskServo",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -54,6 +96,14 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
+
+void StartTaskButton(void *argument);
+void StartTaskLDR(void *argument);
+//laser
+void StartTaskBuzzer(void *argument);
+void StartTaskLed(void *argument);
+void StartTaskServo(void *argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -114,8 +164,15 @@ int main(void)
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();
 
+  TaskButtonHandle = osThreadNew(StartTaskButton, NULL, &TaskButton_attributes);
+  TaskLDRHandle = osThreadNew(StartTaskLDR, NULL, &TaskLDR_attributes);
+  //laser
+  TaskBuzzerHandle = osThreadNew(StartTaskBuzzer, NULL, &TaskBuzzer_attributes);
+  TaskLedHandle = osThreadNew(StartTaskLed, NULL, &TaskLed_attributes);
+  TaskServoHandle = osThreadNew(StartTaskServo, NULL, &TaskServo_attributes);
   /* Start scheduler */
   osKernelStart();
+
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
@@ -200,33 +257,40 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   /* USER CODE END Callback 1 */
 }
-void test_Button() {
-    // Check if PC13 button is pressed (Active LOW)
-    if (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET) {
-        HAL_Delay(50); // Debounce delay
+void StartTaskButton(void *argument) {
+	for(;;)
+	{
+		// Check if PC13 button is pressed (Active LOW)
+		if (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET) {
+			HAL_Delay(50); // Debounce delay
 
-        // Toggle LED (PA5)
-        HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+			// Toggle LED (PA5)
+			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-        // Wait for button release
-        while (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET);
-        HAL_Delay(50); // Prevent multiple triggers
-    }
+			// Wait for button release
+			while (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET);
+			HAL_Delay(50); // Prevent multiple triggers
+		}
+	}
 }
 /*Test LDR Sensor (PA0 - ADC1) */
-void test_LDR() {
-    uint32_t adcValue;
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-    adcValue = HAL_ADC_GetValue(&hadc1);
-    HAL_ADC_Stop(&hadc1);
+void StartTaskLDR(void *argument) {
+	for(;;)
+	{
+		uint32_t adcValue;
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		adcValue = HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_Stop(&hadc1);
 
-    if (adcValue < 1000) {  // Adjust threshold as needed
-        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // Turn on LED if laser is broken
-    } else {
-        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-    }
-    HAL_Delay(500);
+		if (adcValue < 1000) {  // Adjust threshold as needed
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // Turn on LED if laser is broken
+		} else {
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+		}
+		HAL_Delay(500);
+		}
+
 }
 /* Test Laser Pointer (PB1 - GPIO Output) */
 void test_Laser() {
@@ -236,26 +300,34 @@ void test_Laser() {
     HAL_Delay(2000);
 }
 /* Test Buzzer (PB0 - GPIO Output) */
-void test_Buzzer() {
-    HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_SET);  // Buzzer ON
-    HAL_Delay(1000);
-    HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_RESET); // Buzzer OFF
-    HAL_Delay(1000);
+void StartTaskBuzzer(void *argument) {
+	for(;;)
+	{
+		HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_SET);  // Buzzer ON
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_RESET); // Buzzer OFF
+		HAL_Delay(1000);
+	}
 }
-void test_LED() {
-    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // LED ON
-    HAL_Delay(1000);
-    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET); // LED OFF
-    HAL_Delay(1000);
+void StartTaskLed(void *argument) {
+	for(;;){
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // LED ON
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET); // LED OFF
+		HAL_Delay(1000);
+	}
 }
-void test_Servo() {
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);  // Move to -90°
-    HAL_Delay(4000);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1500); // Move to 0° (neutral)
-    HAL_Delay(4000);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2500); // Move to +90°
-    HAL_Delay(2000);
+void StartTaskServo(void *argument) {
+	for(;;)
+	{
+		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);  // Move to -90°
+		HAL_Delay(4000);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1500); // Move to 0° (neutral)
+		HAL_Delay(4000);
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2500); // Move to +90°
+		HAL_Delay(2000);
+	}
 }
 
 
