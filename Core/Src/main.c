@@ -156,30 +156,30 @@ void test_LDR() {
     HAL_ADC_Stop(&hadc1);
 
     if (adcValue < 1000) {  // Adjust threshold as needed
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);  // Turn on LED if laser is broken
+        HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);  // Turn on LED if laser is broken
     } else {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_RESET);
     }
     HAL_Delay(500);
 }
 /* Test Laser Pointer (PB1 - GPIO Output) */
 void test_Laser() {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);  // Laser ON
+    HAL_GPIO_WritePin(GPIOB, Laser_Pin, GPIO_PIN_SET);  // Laser ON
     HAL_Delay(2000);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // Laser OFF
+    HAL_GPIO_WritePin(GPIOB, Laser_Pin, GPIO_PIN_RESET); // Laser OFF
     HAL_Delay(2000);
 }
 /* Test Buzzer (PB0 - GPIO Output) */
 void test_Buzzer() {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);  // Buzzer ON
+    HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_SET);  // Buzzer ON
     HAL_Delay(1000);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // Buzzer OFF
+    HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_RESET); // Buzzer OFF
     HAL_Delay(1000);
 }
 void test_LED() {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);  // LED ON
+    HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);  // LED ON
     HAL_Delay(1000);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // LED OFF
+    HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_RESET); // LED OFF
     HAL_Delay(1000);
 }
 void test_Servo() {
