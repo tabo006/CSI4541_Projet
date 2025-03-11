@@ -1,0 +1,10 @@
+../Core/Src/main.c:42:5:main	1
+../Core/Src/main.c:81:6:SystemClock_Config	3
+../Core/Src/main.c:136:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:151:6:test_LDR	2
+../Core/Src/main.c:166:6:test_Laser	1
+../Core/Src/main.c:173:6:test_Buzzer	1
+../Core/Src/main.c:179:6:test_LED	1
+../Core/Src/main.c:185:6:test_Servo	1
+../Core/Src/main.c:196:6:test_ESP8266	1
+../Core/Src/main.c:205:6:Error_Handler	1
