@@ -37,6 +37,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ALARM_OFF 0
+
+#define ALARM_ON 1
 
 /* USER CODE END PD */
 
@@ -46,6 +49,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+int alarm_state = ALARM_OFF;
 
 /* Definitions for the Button Task */
 osThreadId_t TaskButtonHandle;
@@ -265,7 +269,7 @@ void StartTaskButton(void *argument) {
 			HAL_Delay(50); // Debounce delay
 
 			// Toggle LED (PA5)
-			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+			alarm_state = ALARM_OFF;
 
 			// Wait for button release
 			while (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET);
@@ -284,9 +288,7 @@ void StartTaskLDR(void *argument) {
 		HAL_ADC_Stop(&hadc1);
 
 		if (adcValue < 1000) {  // Adjust threshold as needed
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // Turn on LED if laser is broken
-		} else {
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+			alarm_state = ALARM_ON;  // Turn on LED if laser is broken
 		}
 		HAL_Delay(500);
 		}
@@ -303,23 +305,25 @@ void test_Laser() {
 void StartTaskBuzzer(void *argument) {
 	for(;;)
 	{
-		HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_SET);  // Buzzer ON
-		HAL_Delay(1000);
-		HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_RESET); // Buzzer OFF
-		HAL_Delay(1000);
+		if(alarm_state == ALARM_ON){
+			HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_SET);  // Buzzer ON
+			HAL_Delay(1000);
+			HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_RESET); // Buzzer OFF
+			HAL_Delay(1000);
+		}
+  // Buzzer ON
 	}
 }
 void StartTaskLed(void *argument) {
 	for(;;){
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);  // LED ON
-		HAL_Delay(1000);
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET); // LED OFF
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, alarm_state);  // LED ON
 		HAL_Delay(1000);
 	}
 }
 void StartTaskServo(void *argument) {
 	for(;;)
 	{
+		if(alarm_state == ALARM_ON){
 		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);  // Move to -90°
 		HAL_Delay(4000);
@@ -327,6 +331,7 @@ void StartTaskServo(void *argument) {
 		HAL_Delay(4000);
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2500); // Move to +90°
 		HAL_Delay(2000);
+		}
 	}
 }
 
