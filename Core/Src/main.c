@@ -24,6 +24,9 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include "stdio.h"
+#include "ssd1306.h"
+#include "fonts.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -50,6 +53,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 int alarm_state = ALARM_OFF;
+int light_value = -1;
 
 /* Definitions for the Button Task */
 osThreadId_t TaskButtonHandle;
@@ -91,6 +95,13 @@ const osThreadAttr_t TaskServo_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+osThreadId_t TaskOLEDHandle;
+const osThreadAttr_t TaskOLED_attributes = {
+  .name = "TaskOLED",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
+};
+
 
 
 /* USER CODE BEGIN PV */
@@ -107,6 +118,7 @@ void StartTaskLDR(void *argument);
 void StartTaskBuzzer(void *argument);
 void StartTaskLed(void *argument);
 void StartTaskServo(void *argument);
+void StartTaskOLED(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -150,6 +162,11 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  SSD1306_Init(); // Initialize OLED display
+  SSD1306_Clear(); // Clear the display
+  SSD1306_GotoXY(0, 10); // Set cursor position to (0, 0)
+  SSD1306_Puts("Nope", &Font_11x18, 1); // Display simple message
+  SSD1306_UpdateScreen(); // Update the screen
 
   /* Uncomment the test you want to run */
   // test_LDR();
@@ -174,6 +191,7 @@ int main(void)
   TaskBuzzerHandle = osThreadNew(StartTaskBuzzer, NULL, &TaskBuzzer_attributes);
   TaskLedHandle = osThreadNew(StartTaskLed, NULL, &TaskLed_attributes);
   TaskServoHandle = osThreadNew(StartTaskServo, NULL, &TaskServo_attributes);
+  TaskOLEDHandle = osThreadNew(StartTaskOLED, NULL, &TaskOLED_attributes);
   /* Start scheduler */
   osKernelStart();
 
@@ -286,12 +304,33 @@ void StartTaskLDR(void *argument) {
 		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 		adcValue = HAL_ADC_GetValue(&hadc1);
 		HAL_ADC_Stop(&hadc1);
+		light_value = adcValue;
 
-		if (adcValue < 1000) {  // Adjust threshold as needed
+		if (adcValue < 0) {  // Adjust threshold as needed
 			alarm_state = ALARM_ON;  // Turn on LED if laser is broken
 		}
 		HAL_Delay(500);
 		}
+
+}
+
+void StartTaskOLED(void *argument) {
+
+	 char buffer[10];
+	    for(;;){
+	        SSD1306_Clear();  // Clear the display
+	        SSD1306_GotoXY(0, 10);  // Set cursor position
+	        SSD1306_Puts("LightValue", &Font_11x18, 1);  // Display "LightValue"
+	        SSD1306_UpdateScreen();  // Update the screen
+
+	        SSD1306_GotoXY(0, 30);  // Set cursor for displaying the actual value
+	        sprintf(buffer, "%d", light_value);  // Convert light_value to string
+	        SSD1306_Puts(buffer, &Font_11x18, 1);  // Display the light value
+	        SSD1306_UpdateScreen();  // Update screen
+
+	        osDelay(1000);  // Add delay to prevent flickering
+	    }
+
 
 }
 /* Test Laser Pointer (PB1 - GPIO Output) */
