@@ -101,7 +101,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   ESP_Server_Init();
-  int sensorValue = 25;
+  int sensorValue = 0;
   /* Uncomment the test you want to run */
   // test_LDR();
   // test_Laser();
@@ -114,21 +114,16 @@ int main(void)
   /* USER CODE END 2 */
 
   const char *apiKey = "0J00SUVFH8BB3OGK";
+  const char *intrusionHTML = "<h2 style='color:red;'>I am Your Father toooooooooo!</h2>";
+
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-      // 4. **Read Sensor Data (Example: Temperature)**
-      sensorValue += 25; // Example sensor data
-
-      // 5. **Send Data to ThingSpeak**
-     sendDataToThingSpeak(apiKey, 1, sensorValue);
-
-      // 6. **Wait Before Sending Again (ThingSpeak has a 15s limit for free users)**
-      HAL_Delay(16000); // 16 seconds to be safe
-    /* USER CODE BEGIN 3 */
+	  sendHTMLToLocalServer("10.0.0.86", intrusionHTML);
+	  HAL_Delay(10000);
   }
   /* USER CODE END 3 */
 }

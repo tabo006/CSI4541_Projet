@@ -48,16 +48,13 @@ void ESP_Server_Init() {
     send_AT_command("AT\r\n", "OK", 5000);
 
     printf("Connecting to Wi-Fi...\n");
-    send_AT_command("AT+CWJAP=\"Abraham_Nguero\",\"@\"\r\n", "WIFI CONNECTED", 15000);
+    send_AT_command("AT+CWJAP=\"Abraham_Nguero\",\"@Ramadjita1\"\r\n", "WIFI CONNECTED", 15000);
 
     printf("Checking assigned IP address...\n");
     send_AT_command("AT+CIFSR\r\n", "+CIFSR", 5000);  // Wait for IP Address
 
     printf("Enabling multiple connections...\n");
     send_AT_command("AT+CIPMUX=0\r\n", "OK", 2000);
-
-    //printf("Starting TCP Server...\n");
-    //send_AT_command("AT+CIPSERVER=1,80\r\n", "OK", 3000);
 
     // Enable UART Receive Interrupt
     __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
@@ -77,7 +74,39 @@ void messageHandler() {
     ESP_Clear_Buffer();
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); // Re-enable interrupt
 }
+void sendHTMLToLocalServer(const char *serverIP, const char *htmlContent) {
+    char cmdBuffer[500];
+    char responseBuffer[100];
 
+    // Step 1: Connect to Local Server
+    sprintf(cmdBuffer, "AT+CIPSTART=\"TCP\",\"%s\",8080\r\n", serverIP);
+    send_AT_command(cmdBuffer, "OK", 5000);
+
+    // Step 2: Prepare HTTP POST Request
+    sprintf(cmdBuffer,
+            "POST /status.html HTTP/1.1\r\n"
+            "Host: %s\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: %d\r\n\r\n"
+            "%s\r\n",
+            serverIP, strlen(htmlContent), htmlContent);
+
+    int requestLength = strlen(cmdBuffer);
+
+    // Step 3: Send the Length of the Request
+    sprintf(responseBuffer, "AT+CIPSEND=%d\r\n", requestLength);
+    send_AT_command(responseBuffer, ">", 5000);
+
+    // Step 4: Send the Actual Data
+    send_AT_command(cmdBuffer, "SEND OK", 5000);
+
+    // Step 5: Close the Connection
+    send_AT_command("AT+CIPCLOSE\r\n", "OK", 5000);
+
+    printf("HTML sent to Local Server: %s\n", htmlContent);
+}
+
+/*
 void sendDataToThingSpeak(const char *apiKey, int fieldNumber, int value) {
     char cmdBuffer[200];
     char responseBuffer[100];
@@ -104,7 +133,7 @@ void sendDataToThingSpeak(const char *apiKey, int fieldNumber, int value) {
     // **Step 5: Close the Connection**
     send_AT_command("AT+CIPCLOSE\r\n", "OK",5000);  // Send AT command and print response
 }
-
+*/
 /*void sendData() {
     char outputString[300], cipsend[50], response[600];
 
@@ -124,17 +153,4 @@ void sendDataToThingSpeak(const char *apiKey, int fieldNumber, int value) {
     HAL_UART_Transmit(&huart2, (uint8_t*)"AT+CIPCLOSE=0\r\n", strlen("AT+CIPCLOSE=0\r\n"), 100);
 }
 */
-void ESP_Clear_Buffer() {
-    memset(buffer, 0, sizeof(buffer));
-    buffer_index = 0;
-}
 
-// Utility function to check if a substring exists in a string
-int string_contains(const char *str, const char *sub, int length) {
-    for (int i = 0; i <= length - strlen(sub); i++) {
-        if (strncmp(&str[i], sub, strlen(sub)) == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
