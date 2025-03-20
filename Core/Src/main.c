@@ -24,7 +24,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-
+#include "esp8266.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -49,49 +49,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-int alarm_state = ALARM_OFF;
-
-/* Definitions for the Button Task */
-osThreadId_t TaskButtonHandle;
-const osThreadAttr_t TaskButton_attributes = {
-  .name = "TaskButton",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-
-/* Definitions for the LDR Task */
-osThreadId_t TaskLDRHandle;
-const osThreadAttr_t TaskLDR_attributes = {
-  .name = "TaskLDR",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-
-/* Definitions for the Buzzer Task */
-osThreadId_t TaskBuzzerHandle;
-const osThreadAttr_t TaskBuzzer_attributes = {
-  .name = "TaskBuzzer",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-
-/* Definitions for the LED Task */
-osThreadId_t TaskLedHandle;
-const osThreadAttr_t TaskLed_attributes = {
-  .name = "TaskLed",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-
-/* Definitions for the Servo Task */
-osThreadId_t TaskServoHandle;
-const osThreadAttr_t TaskServo_attributes = {
-  .name = "TaskServo",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-
-
 
 /* USER CODE BEGIN PV */
 
@@ -100,14 +57,6 @@ const osThreadAttr_t TaskServo_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
-
-void StartTaskButton(void *argument);
-void StartTaskLDR(void *argument);
-//laser
-void StartTaskBuzzer(void *argument);
-void StartTaskLed(void *argument);
-void StartTaskServo(void *argument);
-
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -149,8 +98,10 @@ int main(void)
   MX_I2C1_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  ESP_Server_Init();
+  int sensorValue = 25;
   /* Uncomment the test you want to run */
   // test_LDR();
   // test_Laser();
@@ -162,29 +113,21 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  /* Init scheduler */
-  osKernelInitialize();
-
-  /* Call init function for freertos objects (in freertos.c) */
-  MX_FREERTOS_Init();
-
-  TaskButtonHandle = osThreadNew(StartTaskButton, NULL, &TaskButton_attributes);
-  TaskLDRHandle = osThreadNew(StartTaskLDR, NULL, &TaskLDR_attributes);
-  //laser
-  TaskBuzzerHandle = osThreadNew(StartTaskBuzzer, NULL, &TaskBuzzer_attributes);
-  TaskLedHandle = osThreadNew(StartTaskLed, NULL, &TaskLed_attributes);
-  TaskServoHandle = osThreadNew(StartTaskServo, NULL, &TaskServo_attributes);
-  /* Start scheduler */
-  osKernelStart();
-
-
+  const char *apiKey = "0J00SUVFH8BB3OGK";
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
+      // 4. **Read Sensor Data (Example: Temperature)**
+      sensorValue += 25; // Example sensor data
 
+      // 5. **Send Data to ThingSpeak**
+     sendDataToThingSpeak(apiKey, 1, sensorValue);
+
+      // 6. **Wait Before Sending Again (ThingSpeak has a 15s limit for free users)**
+      HAL_Delay(16000); // 16 seconds to be safe
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -240,7 +183,10 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
+int _write(int file, char *ptr, int len) {
+    HAL_UART_Transmit(&huart2, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    return len;
+}
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM6 interrupt took place, inside
@@ -261,80 +207,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   /* USER CODE END Callback 1 */
 }
-void StartTaskButton(void *argument) {
-	for(;;)
-	{
-		// Check if PC13 button is pressed (Active LOW)
-		if (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET) {
-			HAL_Delay(50); // Debounce delay
-
-			// Toggle LED (PA5)
-			alarm_state = ALARM_OFF;
-
-			// Wait for button release
-			while (HAL_GPIO_ReadPin(GPIOC, Stop_button_Pin) == GPIO_PIN_RESET);
-			HAL_Delay(50); // Prevent multiple triggers
-		}
-	}
-}
-/*Test LDR Sensor (PA0 - ADC1) */
-void StartTaskLDR(void *argument) {
-	for(;;)
-	{
-		uint32_t adcValue;
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		adcValue = HAL_ADC_GetValue(&hadc1);
-		HAL_ADC_Stop(&hadc1);
-
-		if (adcValue < 1000) {  // Adjust threshold as needed
-			alarm_state = ALARM_ON;  // Turn on LED if laser is broken
-		}
-		HAL_Delay(500);
-		}
-
-}
-/* Test Laser Pointer (PB1 - GPIO Output) */
-void test_Laser() {
-    HAL_GPIO_WritePin(GPIOB, Laser_Pin, GPIO_PIN_SET);  // Laser ON
-    HAL_Delay(2000);
-    HAL_GPIO_WritePin(GPIOB, Laser_Pin, GPIO_PIN_RESET); // Laser OFF
-    HAL_Delay(2000);
-}
-/* Test Buzzer (PB0 - GPIO Output) */
-void StartTaskBuzzer(void *argument) {
-	for(;;)
-	{
-		if(alarm_state == ALARM_ON){
-			HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_SET);  // Buzzer ON
-			HAL_Delay(1000);
-			HAL_GPIO_WritePin(GPIOB, Buzzer_Pin, GPIO_PIN_RESET); // Buzzer OFF
-			HAL_Delay(1000);
-		}
-  // Buzzer ON
-	}
-}
-void StartTaskLed(void *argument) {
-	for(;;){
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, alarm_state);  // LED ON
-		HAL_Delay(1000);
-	}
-}
-void StartTaskServo(void *argument) {
-	for(;;)
-	{
-		if(alarm_state == ALARM_ON){
-		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);  // Move to -90°
-		HAL_Delay(4000);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1500); // Move to 0° (neutral)
-		HAL_Delay(4000);
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2500); // Move to +90°
-		HAL_Delay(2000);
-		}
-	}
-}
-
 
 /**
   * @brief  This function is executed in case of error occurrence.

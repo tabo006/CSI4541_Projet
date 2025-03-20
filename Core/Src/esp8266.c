@@ -7,21 +7,60 @@ char buffer[600];
 int buffer_index = 0;
 volatile uint8_t intrusion_detected = 0; // 1 = Detected, 0 = Normal
 
+void send_AT_command(char *cmd, const char *expectedResponse, uint32_t timeout) {
+    printf("Sending: %s", cmd);
+    HAL_UART_Transmit(&huart1, (uint8_t *)cmd, strlen(cmd), 1000);
+
+    if (!waitFor(expectedResponse, timeout)) {
+        printf("Warning: No valid response for: %s\n", cmd);
+    }
+}
+int waitFor(const char *expectedResponse, uint32_t timeout) {
+    uint8_t rxBuffer[200] = {0};  // Increased buffer size
+    uint32_t startTick = HAL_GetTick();
+    int index = 0;
+
+    while ((HAL_GetTick() - startTick) < timeout) {  // Timeout check
+        if (HAL_UART_Receive(&huart1, &rxBuffer[index], 1, 100) == HAL_OK) {
+            if (rxBuffer[index] == '\n' || rxBuffer[index] == '\r') {  // Stop at newline
+                rxBuffer[index] = '\0';  // Null terminate string
+
+                if (strstr((char *)rxBuffer, expectedResponse)) {
+                	printf("ESP Response: %s\n", rxBuffer);// Check if expected response exists
+                    return 1;  // Found the expected response
+                }
+
+                index = 0;  // Reset buffer if response not matched
+            } else {
+                index++;
+                if (index >= sizeof(rxBuffer) - 1) index = 0;  // Prevent buffer overflow
+            }
+        }
+    }
+    printf("Timeout waiting for: %s\n", expectedResponse);
+    return 0;  // Timeout reached without expected response
+}
 void ESP_Server_Init() {
-    // Connect to Wi-Fi
-    HAL_UART_Transmit(&huart2, (uint8_t*)"AT+CWJAP=\"Your_WiFi_SSID\",\"Your_WiFi_Password\"\r\n", 38, HAL_MAX_DELAY);
-    HAL_Delay(5000);
+    printf("RESETTING ESP8266...\n");
+    send_AT_command("AT+RST\r\n", "OK", 5000);
 
-    // Enable multiple connections
-    HAL_UART_Transmit(&huart2, (uint8_t*)"AT+CIPMUX=1\r\n", 13, HAL_MAX_DELAY);
-    HAL_Delay(1000);
+    printf("Testing AT Command...\n");
+    send_AT_command("AT\r\n", "OK", 5000);
 
-    // Start TCP Server on ESP8266
-    HAL_UART_Transmit(&huart2, (uint8_t*)"AT+CIPSERVER=1,80\r\n", 19, HAL_MAX_DELAY);
-    HAL_Delay(2000);
+    printf("Connecting to Wi-Fi...\n");
+    send_AT_command("AT+CWJAP=\"Abraham_Nguero\",\"@\"\r\n", "WIFI CONNECTED", 15000);
+
+    printf("Checking assigned IP address...\n");
+    send_AT_command("AT+CIFSR\r\n", "+CIFSR", 5000);  // Wait for IP Address
+
+    printf("Enabling multiple connections...\n");
+    send_AT_command("AT+CIPMUX=0\r\n", "OK", 2000);
+
+    //printf("Starting TCP Server...\n");
+    //send_AT_command("AT+CIPSERVER=1,80\r\n", "OK", 3000);
 
     // Enable UART Receive Interrupt
-    __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
+    __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
 }
 
 void messageHandler() {
@@ -39,7 +78,34 @@ void messageHandler() {
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); // Re-enable interrupt
 }
 
-void sendData() {
+void sendDataToThingSpeak(const char *apiKey, int fieldNumber, int value) {
+    char cmdBuffer[200];
+    char responseBuffer[100];
+    printf("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80\r\n");
+    // **Step 1: Connect to ThingSpeak's Server**
+    sprintf(cmdBuffer, "AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80\r\n");
+    send_AT_command(cmdBuffer, "OK", 5000);
+
+    printf("GET /update");
+    // **Step 2: Prepare HTTP GET Request with API Key and Field Number**
+    sprintf(cmdBuffer, "GET /update?api_key=%s&field%d=%d\r\n", apiKey, fieldNumber, value);
+    int requestLength = strlen(cmdBuffer);
+
+    // **Step 3: Send the Length of the Request**
+    printf("AT+CIPSEND");
+    sprintf(responseBuffer, "AT+CIPSEND=%d\r\n", requestLength);
+    send_AT_command(responseBuffer, ">", 5000);
+
+    printf("Data sent to ThingSpeak: API_KEY=%s, Field=%d, Value=%d\n", apiKey, fieldNumber, value);
+    // **Step 4: Send the Actual Data**
+    send_AT_command(cmdBuffer, "SEND OK", 5000);
+
+    printf("AT+CIPCLOSE");
+    // **Step 5: Close the Connection**
+    send_AT_command("AT+CIPCLOSE\r\n", "OK",5000);  // Send AT command and print response
+}
+
+/*void sendData() {
     char outputString[300], cipsend[50], response[600];
 
     sprintf(outputString, "<html><head><meta http-equiv=\"refresh\" content=\"5\">"
@@ -57,7 +123,7 @@ void sendData() {
     HAL_Delay(50);
     HAL_UART_Transmit(&huart2, (uint8_t*)"AT+CIPCLOSE=0\r\n", strlen("AT+CIPCLOSE=0\r\n"), 100);
 }
-
+*/
 void ESP_Clear_Buffer() {
     memset(buffer, 0, sizeof(buffer));
     buffer_index = 0;

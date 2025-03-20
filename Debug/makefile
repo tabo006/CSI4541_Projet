@@ -9,6 +9,10 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -60,8 +64,8 @@ all: main-build
 main-build: CSI4145_ProjectN.elf secondary-outputs
 
 # Tool invocations
-CSI4145_ProjectN.elf CSI4145_ProjectN.map: $(OBJS) $(USER_OBJS) /Users/abrahamtabo/STM32CubeIDE/workspace_1.17.0/CSI4145_ProjectN/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CSI4145_ProjectN.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/abrahamtabo/STM32CubeIDE/workspace_1.17.0/CSI4145_ProjectN/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CSI4145_ProjectN.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+CSI4145_ProjectN.elf CSI4145_ProjectN.map: $(OBJS) $(USER_OBJS) /Users/abrahamtabo/Desktop/uOttawa_classes/winter_2025/CSI4541/CSI4541_Projet/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "CSI4145_ProjectN.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/abrahamtabo/Desktop/uOttawa_classes/winter_2025/CSI4541/CSI4541_Projet/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CSI4145_ProjectN.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
