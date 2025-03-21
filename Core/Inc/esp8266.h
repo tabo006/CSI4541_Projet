@@ -6,7 +6,7 @@
 #include <string.h> // Required for string operations
 
 // Function Prototypes
-void ESP_Server_Init(void);
+void ESP_Server_Init(const char *ssid, const char *password);
 void messageHandler(void);
 void sendData(void);
 void ESP_Clear_Buffer(void);

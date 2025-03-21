@@ -57,8 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define Stop_button_Pin GPIO_PIN_13
-#define Stop_button_GPIO_Port GPIOC
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define USART_TX_Pin GPIO_PIN_2
@@ -67,6 +65,10 @@ void Error_Handler(void);
 #define USART_RX_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
+#define System_state_Pin GPIO_PIN_6
+#define System_state_GPIO_Port GPIOA
+#define control_System_Pin GPIO_PIN_4
+#define control_System_GPIO_Port GPIOC
 #define Buzzer_Pin GPIO_PIN_0
 #define Buzzer_GPIO_Port GPIOB
 #define Laser_Pin GPIO_PIN_1
