@@ -171,6 +171,7 @@ MX_USART1_UART_Init();
 MX_I2C1_Init();
 MX_ADC1_Init();
 MX_TIM2_Init();
+MX_TIM1_Init();
 /* USER CODE BEGIN 2 */
 SSD1306_Init(); // Initialize OLED display
 SSD1306_Clear(); // Clear the display
@@ -432,18 +433,26 @@ void StartTaskSystemLed(void *argument) {
 void StartTaskServo(void *argument) {
 	for(;;)
 	{
+
 		osDelay(1000);
-		if(alarm_state == ALARM_ON && door_state == DOOR_OPEN){
-			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2500); // Move to +180°
-			HAL_Delay(2000);
-			door_state = DOOR_CLOSED;
-		}else if(alarm_state == ALARM_OFF && door_state == DOOR_CLOSED){
-			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500); // Move to 0° (neutral)
-			HAL_Delay(2000);
-			door_state = DOOR_OPEN;
-		}
+		 if(alarm_state == ALARM_ON && door_state == DOOR_OPEN) {
+		            // Move both servos 90° to the left
+		            HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+		            HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+		            __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1500);  // 90° for first servo
+		            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1500);  // 90° for second servo (same direction)
+		            HAL_Delay(2000);
+		            door_state = DOOR_CLOSED;
+		        }
+		        else if(alarm_state == ALARM_OFF && door_state == DOOR_CLOSED) {
+		            // Move both servos back to 0° (neutral)
+		            HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+		            HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+		            __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);  // Back to 0° for first servo
+		            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 2500);   // Back to 0° for second servo (same direction)
+		            HAL_Delay(2000);
+		            door_state = DOOR_OPEN;
+		        }
 	}
 }
 /**

@@ -64,8 +64,8 @@ all: main-build
 main-build: CSI4145_ProjectN.elf secondary-outputs
 
 # Tool invocations
-CSI4145_ProjectN.elf CSI4145_ProjectN.map: $(OBJS) $(USER_OBJS) /Users/abrahamtabo/Desktop/uOttawa_classes/winter_2025/CSI4541/CSI4541_Projet/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CSI4145_ProjectN.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/abrahamtabo/Desktop/uOttawa_classes/winter_2025/CSI4541/CSI4541_Projet/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CSI4145_ProjectN.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+CSI4145_ProjectN.elf CSI4145_ProjectN.map: $(OBJS) $(USER_OBJS) /Users/chloe/Desktop/CSI4541_Projet/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "CSI4145_ProjectN.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/chloe/Desktop/CSI4541_Projet/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CSI4145_ProjectN.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
