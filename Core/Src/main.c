@@ -488,51 +488,43 @@ void StartTaskServo(void *argument) {
 }
 
 
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)  // if the interrupt source is channel1
-	{
-		if (Is_First_Captured==0) // if the first value is not captured
-		{
-			IC_Val1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1); // read the first value
-			Is_First_Captured = 1;  // set the first captured as true
-			// Now change the polarity to falling edge
-			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_FALLING);
-		}
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) { // If the interrupt is from channel 1
+        if (Is_First_Captured == 0) { // If it's the first edge (rising)
+            IC_Val1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1); // Read first value
+            Is_First_Captured = 1;
+            __HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_FALLING); // Switch to falling edge
+        } else if (Is_First_Captured == 1) { // If it's the second edge (falling)
+            IC_Val2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1); // Read second value
+            __HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_RISING); // Reset to rising edge
 
-		else if (Is_First_Captured==1)   // if the first is already captured
-		{
-			IC_Val2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);  // read second value
-			__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
+            // Compute the difference
+            if (IC_Val2 > IC_Val1) {
+                Difference = IC_Val2 - IC_Val1;
+            } else {
+                Difference = (0xFFFF - IC_Val1) + IC_Val2;
+            }
 
-			if (IC_Val2 > IC_Val1)
-			{
-				Difference = IC_Val2-IC_Val1;
-			}
+            Distance = Difference * 0.034 / 2; // Convert to cm
 
-			else if (IC_Val1 > IC_Val2)
-			{
-				Difference = (0xffff - IC_Val1) + IC_Val2;
-			}
-
-			Distance = Difference * .034/2;
-			Is_First_Captured = 0; // set it back to false
-
-			// set polarity to rising edge
-			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_RISING);
-			__HAL_TIM_DISABLE_IT(&htim3, TIM_IT_CC1);
-		}
-	}
+            Is_First_Captured = 0; // Reset flag for next measurement
+        }
+    }
 }
 
-void HCSR04_Read (void)
-{
-	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
-	delay(10);  // wait for 10 us
-	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
 
-	__HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC1);
+void HCSR04_Read (void) {
+    HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);  // Set TRIG pin HIGH
+    delay(10);  // 10µs pulse
+    HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);  // Set TRIG pin LOW
+
+    // Reset first capture flag
+    Is_First_Captured = 0;
+
+    // Start the input capture interrupt
+    HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
 }
+
 /**
 * @brief  This function is executed in case of error occurrence.
 * @retval None

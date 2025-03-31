@@ -12,7 +12,7 @@
 ../Core/Src/main.c:444:6:StartTaskLed	2
 ../Core/Src/main.c:454:6:StartTaskSystemLed	2
 ../Core/Src/main.c:464:6:StartTaskServo	5
-../Core/Src/main.c:491:6:HAL_TIM_IC_CaptureCallback	6
-../Core/Src/main.c:528:6:HCSR04_Read	1
-../Core/Src/main.c:540:6:Error_Handler	1
-../Core/Src/main.c:550:5:_write	1
+../Core/Src/main.c:491:6:HAL_TIM_IC_CaptureCallback	5
+../Core/Src/main.c:516:6:HCSR04_Read	1
+../Core/Src/main.c:532:6:Error_Handler	1
+../Core/Src/main.c:542:5:_write	1
