@@ -42,6 +42,9 @@
 #define SYSTEM_ON 1
 #define DOOR_OPEN 0
 #define DOOR_CLOSED 1
+
+#define TRIG_PIN GPIO_PIN_8
+#define TRIG_PORT GPIOC
 /* USER CODE END PD */
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -51,6 +54,14 @@ int alarm_state = ALARM_OFF;
 int light_value = -1;
 volatile int system_state= SYSTEM_OFF;
 int door_state= DOOR_OPEN;
+
+
+uint32_t IC_Val1 = 0;
+uint32_t IC_Val2 = 0;
+uint32_t Difference = 0;
+uint8_t Is_First_Captured = 0;  // is the first value captured ?
+uint8_t Distance  = 0;
+
 /* Definitions for the Button Task */
 osThreadId_t TaskButtonHandle;
 const osThreadAttr_t TaskButton_attributes = {
@@ -92,12 +103,6 @@ const osThreadAttr_t TaskServo_attributes = {
 .stack_size = 128 * 4,
 .priority = (osPriority_t) osPriorityNormal,
 };
-osThreadId_t TaskOLEDHandle;
-const osThreadAttr_t TaskOLED_attributes = {
-.name = "TaskOLED",
-.stack_size = 128 * 4,
-.priority = (osPriority_t) osPriorityHigh,
-};
 osThreadId_t TaskLedSystemHandle;
 const osThreadAttr_t StartTaskSystemLed_attributes = {
 .name = "TaskSystemLed",
@@ -116,6 +121,12 @@ const osThreadAttr_t StartTaskUpdateWeb_attributes = {
 .stack_size = 1028 * 4,
 .priority = (osPriority_t) osPriorityNormal,
 };
+osThreadId_t TaskDistanceHandle;
+const osThreadAttr_t StartTaskDistance_attributes = {
+.name = "TaskDistance",
+.stack_size = 1028 * 4,
+.priority = (osPriority_t) 25,
+};
 osMutexId_t systemStateMutex;
 const osMutexAttr_t systemStateMutex_attributes = {
    .name = "systemStateMutex"
@@ -125,6 +136,9 @@ const osMutexAttr_t systemStateMutex_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
+void delay (uint16_t time);
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);
+void HCSR04_Read (void);
 void StartTaskButton(void *argument);
 void StartTaskSystemButton(void *argument);
 void StartTaskLDR(void *argument);
@@ -133,15 +147,16 @@ void StartTaskUpdateWeb(void *argument);
 void StartTaskBuzzer(void *argument);
 void StartTaskLed(void *argument);
 void StartTaskServo(void *argument);
-void StartTaskOLED(void *argument);
 void StartTaskSystemLed(void *argument);
 void StartTaskLaser(void *argument);
+void StartTaskDistance(void *argument);
 const char *intrusionHTML = "<p style='color:red;'>Intrusion Detected</p>";
 const char *regularHTML = "<p style='color:blue;'>System Armed no intrusion</p>";
 const char *systemoffHTML = "<p style='color:blue;'>System Disarmed</p>";
-const char *localIP =  "10.0.0.86"; //change this to yours
-const char *pwd = "XXXXXXXXXXXX";
-const char *username = "XXXXXXXX";
+const char *localIP =    "192.168.1.125"; //change this to yours
+const char *pwd = "Chloe@Mathew2008";
+const char *username = "FRENN";
+
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 /* Private user code ---------------------------------------------------------*/
@@ -151,6 +166,12 @@ const char *username = "XXXXXXXX";
 * @brief  The application entry point.
 * @retval int
 */
+
+void delay (uint16_t time){
+	__HAL_TIM_SET_COUNTER(&htim3, 0);
+	while(__HAL_TIM_GET_COUNTER(&htim3) < time);
+}
+
 int main(void)
 {
 /* USER CODE BEGIN 1 */
@@ -166,17 +187,18 @@ SystemClock_Config();
 /* USER CODE END SysInit */
 /* Initialize all configured peripherals */
 MX_GPIO_Init();
-MX_USART2_UART_Init();
-MX_USART1_UART_Init();
-MX_I2C1_Init();
-MX_ADC1_Init();
-MX_TIM2_Init();
-MX_TIM1_Init();
+  MX_USART2_UART_Init();
+  MX_I2C1_Init();
+  MX_ADC1_Init();
+  MX_TIM2_Init();
+  MX_USART1_UART_Init();
+  MX_TIM1_Init();
+  MX_TIM3_Init();
 /* USER CODE BEGIN 2 */
 SSD1306_Init(); // Initialize OLED display
 SSD1306_Clear(); // Clear the display
 SSD1306_GotoXY(0, 10); // Set cursor position to (0, 0)
-SSD1306_Puts("Nope", &Font_11x18, 1); // Display simple message
+SSD1306_Puts("main", &Font_11x18, 1); // Display simple message
 SSD1306_UpdateScreen(); // Update the screen
 /* Uncomment the test you want to run */
 // test_LDR();
@@ -185,6 +207,7 @@ SSD1306_UpdateScreen(); // Update the screen
 // test_LED();
 // test_Servo();
 // test_ESP8266();
+HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
 ESP_Server_Init(username, pwd);
 
 sendHTMLToLocalServer(localIP, regularHTML);
@@ -208,6 +231,7 @@ TaskServoHandle = osThreadNew(StartTaskServo, NULL, &TaskServo_attributes);
 TaskLedSystemHandle = osThreadNew(StartTaskSystemLed, NULL, &StartTaskSystemLed_attributes);
 TaskLaserHandle = osThreadNew(StartTaskLaser, NULL, &StartTaskLaser_attributes);
 TaskUpdateWebHandle = osThreadNew(StartTaskUpdateWeb, NULL, &StartTaskUpdateWeb_attributes);
+TaskDistanceHandle = osThreadNew(StartTaskDistance, NULL, &StartTaskDistance_attributes);
 /* Start scheduler */
 osKernelStart();
 /* We should never get here as control is now taken by the scheduler */
@@ -297,6 +321,26 @@ void StartTaskButton(void *argument) {
 	}
 }
 
+void StartTaskDistance(void *argument) {
+	for(;;)
+	{
+		 HCSR04_Read();  // Trigger distance measurement
+		 HAL_Delay(200);  // Delay to allow sensor to respond
+
+		 char buffer[10];
+		 SSD1306_Clear();
+		 SSD1306_GotoXY(0, 10);
+		 SSD1306_Puts("Distance", &Font_11x18, 1);
+		 SSD1306_GotoXY(0, 30);
+		 sprintf(buffer, "%d cm", Distance);
+		 SSD1306_Puts(buffer, &Font_11x18, 1);
+		 SSD1306_UpdateScreen();
+
+		 osDelay(500);  // Delay to avoid excessive updates
+		}
+	}
+
+
 void StartTaskUpdateWeb(void *argument) {
     int prev_alarm_state = ALARM_OFF;  // Track previous state && prev_alarm_state == ALARM_OFF
     int prev_system_state = SYSTEM_ON;
@@ -373,20 +417,7 @@ void StartTaskLDR(void *argument) {
    }
 }
 
-void StartTaskOLED(void *argument) {
-	 char buffer[10];
-	    for(;;){
-	        SSD1306_Clear();  // Clear the display
-	        SSD1306_GotoXY(0, 10);  // Set cursor position
-	        SSD1306_Puts("LightValue", &Font_11x18, 1);  // Display "LightValue"
-	        SSD1306_UpdateScreen();  // Update the screen
-	        SSD1306_GotoXY(0, 30);  // Set cursor for displaying the actual value
-	        sprintf(buffer, "%d", light_value);  // Convert light_value to string
-	        SSD1306_Puts(buffer, &Font_11x18, 1);  // Display the light value
-	        SSD1306_UpdateScreen();  // Update screen
-	        osDelay(1000);  // Add delay to prevent flickering
-	    }
-}
+
 void StartTaskLaser(void *argument) {
    for(;;) {
        if (system_state == SYSTEM_ON) {
@@ -454,6 +485,53 @@ void StartTaskServo(void *argument) {
 		            door_state = DOOR_OPEN;
 		        }
 	}
+}
+
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)  // if the interrupt source is channel1
+	{
+		if (Is_First_Captured==0) // if the first value is not captured
+		{
+			IC_Val1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1); // read the first value
+			Is_First_Captured = 1;  // set the first captured as true
+			// Now change the polarity to falling edge
+			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_FALLING);
+		}
+
+		else if (Is_First_Captured==1)   // if the first is already captured
+		{
+			IC_Val2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);  // read second value
+			__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
+
+			if (IC_Val2 > IC_Val1)
+			{
+				Difference = IC_Val2-IC_Val1;
+			}
+
+			else if (IC_Val1 > IC_Val2)
+			{
+				Difference = (0xffff - IC_Val1) + IC_Val2;
+			}
+
+			Distance = Difference * .034/2;
+			Is_First_Captured = 0; // set it back to false
+
+			// set polarity to rising edge
+			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_RISING);
+			__HAL_TIM_DISABLE_IT(&htim3, TIM_IT_CC1);
+		}
+	}
+}
+
+void HCSR04_Read (void)
+{
+	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
+	delay(10);  // wait for 10 us
+	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
+
+	__HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC1);
 }
 /**
 * @brief  This function is executed in case of error occurrence.
