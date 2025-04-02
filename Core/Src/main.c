@@ -336,10 +336,13 @@ void StartTaskDistance(void *argument) {
 		 SSD1306_Puts(buffer, &Font_11x18, 1);
 		 SSD1306_UpdateScreen();
 
-		 if(system_state == SYSTEM_ON && Distance < 15){
+		 if(system_state == SYSTEM_ON && Distance < 30){
 			 alarm_state = ALARM_ON;
 		 }
 
+		 if(alarm_state == ALARM_OFF){
+			 osDelay(200);
+		 }
 		 osDelay(500);  // Delay to avoid excessive updates
 		}
 	}
@@ -406,13 +409,16 @@ void StartTaskLDR(void *argument) {
        // Update local state
        local_system_state = current_system_state;
        if (current_system_state == SYSTEM_ON) {
+    	   if(alarm_state == ALARM_OFF){
+    	  			 osDelay(200);
+    	  		 }
            uint32_t adcValue;
            HAL_ADC_Start(&hadc1);
            HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
            adcValue = HAL_ADC_GetValue(&hadc1);
            HAL_ADC_Stop(&hadc1);
            light_value = adcValue;
-           if (adcValue < 1500) {
+           if (adcValue < 1500 && system_state == SYSTEM_ON) {
                alarm_state = ALARM_ON;
 
            }
