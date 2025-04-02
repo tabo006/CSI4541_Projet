@@ -153,9 +153,9 @@ void StartTaskDistance(void *argument);
 const char *intrusionHTML = "<p style='color:red;'>Intrusion Detected</p>";
 const char *regularHTML = "<p style='color:blue;'>System Armed no intrusion</p>";
 const char *systemoffHTML = "<p style='color:blue;'>System Disarmed</p>";
-const char *localIP =    "192.168.1.125"; //change this to yours
-const char *pwd = "Chloe@Mathew2008";
-const char *username = "FRENN";
+const char *localIP =    "172.20.10.2"; //change this to yours
+const char *pwd = "chloe1908";
+const char *username = "Chloe";
 
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */

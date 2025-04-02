@@ -7,23 +7,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   1 .text         0000c200  080001d0  080001d0  000011d0  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       00001348  0800c3d0  0800c3d0  0000d3d0  2**2
+  2 .rodata       0000133c  0800c3d0  0800c3d0  0000d3d0  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .ARM.extab    00000000  0800d718  0800d718  0000f090  2**0
+  3 .ARM.extab    00000000  0800d70c  0800d70c  0000f090  2**0
                   CONTENTS
-  4 .ARM          00000008  0800d718  0800d718  0000e718  2**2
+  4 .ARM          00000008  0800d70c  0800d70c  0000e70c  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .preinit_array 00000000  0800d720  0800d720  0000f090  2**0
+  5 .preinit_array 00000000  0800d714  0800d714  0000f090  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  6 .init_array   00000004  0800d720  0800d720  0000e720  2**2
+  6 .init_array   00000004  0800d714  0800d714  0000e714  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  7 .fini_array   00000004  0800d724  0800d724  0000e724  2**2
+  7 .fini_array   00000004  0800d718  0800d718  0000e718  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  8 .data         00000090  20000000  0800d728  0000f000  2**2
+  8 .data         00000090  20000000  0800d71c  0000f000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          00005160  20000090  0800d7b8  0000f090  2**2
+  9 .bss          00005160  20000090  0800d7ac  0000f090  2**2
                   ALLOC
- 10 ._user_heap_stack 00000600  200051f0  0800d7b8  0000f1f0  2**0
+ 10 ._user_heap_stack 00000600  200051f0  0800d7ac  0000f1f0  2**0
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0000f090  2**0
                   CONTENTS, READONLY
@@ -1665,7 +1665,7 @@ void MX_FREERTOS_Init(void) {
 }
  80011c8:	bf00      	nop
  80011ca:	bd80      	pop	{r7, pc}
- 80011cc:	0800d530 	.word	0x0800d530
+ 80011cc:	0800d524 	.word	0x0800d524
  80011d0:	080011d9 	.word	0x080011d9
  80011d4:	200000f4 	.word	0x200000f4
 
@@ -2275,43 +2275,43 @@ while (1)
  8001588:	bf00      	nop
  800158a:	e7fd      	b.n	8001588 <main+0x138>
  800158c:	20000000 	.word	0x20000000
- 8001590:	0800c748 	.word	0x0800c748
+ 8001590:	0800c73c 	.word	0x0800c73c
  8001594:	20000678 	.word	0x20000678
  8001598:	20000020 	.word	0x20000020
  800159c:	2000001c 	.word	0x2000001c
  80015a0:	20000018 	.word	0x20000018
  80015a4:	20000010 	.word	0x20000010
- 80015a8:	0800d6bc 	.word	0x0800d6bc
+ 80015a8:	0800d6b0 	.word	0x0800d6b0
  80015ac:	20000190 	.word	0x20000190
- 80015b0:	0800c750 	.word	0x0800c750
- 80015b4:	0800d554 	.word	0x0800d554
+ 80015b0:	0800c744 	.word	0x0800c744
+ 80015b4:	0800d548 	.word	0x0800d548
  80015b8:	0800172d 	.word	0x0800172d
  80015bc:	20000168 	.word	0x20000168
- 80015c0:	0800d578 	.word	0x0800d578
+ 80015c0:	0800d56c 	.word	0x0800d56c
  80015c4:	08001915 	.word	0x08001915
  80015c8:	2000016c 	.word	0x2000016c
- 80015cc:	0800d59c 	.word	0x0800d59c
+ 80015cc:	0800d590 	.word	0x0800d590
  80015d0:	08001995 	.word	0x08001995
  80015d4:	20000170 	.word	0x20000170
- 80015d8:	0800d5c0 	.word	0x0800d5c0
+ 80015d8:	0800d5b4 	.word	0x0800d5b4
  80015dc:	08001a69 	.word	0x08001a69
  80015e0:	20000174 	.word	0x20000174
- 80015e4:	0800d5e4 	.word	0x0800d5e4
+ 80015e4:	0800d5d8 	.word	0x0800d5d8
  80015e8:	08001aa9 	.word	0x08001aa9
  80015ec:	20000178 	.word	0x20000178
- 80015f0:	0800d608 	.word	0x0800d608
+ 80015f0:	0800d5fc 	.word	0x0800d5fc
  80015f4:	08001b11 	.word	0x08001b11
  80015f8:	2000017c 	.word	0x2000017c
- 80015fc:	0800d62c 	.word	0x0800d62c
+ 80015fc:	0800d620 	.word	0x0800d620
  8001600:	08001ad9 	.word	0x08001ad9
  8001604:	20000180 	.word	0x20000180
- 8001608:	0800d650 	.word	0x0800d650
+ 8001608:	0800d644 	.word	0x0800d644
  800160c:	08001a31 	.word	0x08001a31
  8001610:	20000184 	.word	0x20000184
- 8001614:	0800d674 	.word	0x0800d674
+ 8001614:	0800d668 	.word	0x0800d668
  8001618:	0800180d 	.word	0x0800180d
  800161c:	20000188 	.word	0x20000188
- 8001620:	0800d698 	.word	0x0800d698
+ 8001620:	0800d68c 	.word	0x0800d68c
  8001624:	08001781 	.word	0x08001781
  8001628:	2000018c 	.word	0x2000018c
 
@@ -2602,9 +2602,9 @@ void StartTaskDistance(void *argument) {
 	{
  80017f2:	e7c9      	b.n	8001788 <StartTaskDistance+0x8>
  80017f4:	20000000 	.word	0x20000000
- 80017f8:	0800c774 	.word	0x0800c774
+ 80017f8:	0800c768 	.word	0x0800c768
  80017fc:	20000165 	.word	0x20000165
- 8001800:	0800c780 	.word	0x0800c780
+ 8001800:	0800c774 	.word	0x0800c774
  8001804:	20000150 	.word	0x20000150
  8001808:	2000014c 	.word	0x2000014c
 
@@ -2757,7 +2757,7 @@ void StartTaskUpdateWeb(void *argument) {
  80018f4:	e792      	b.n	800181c <StartTaskUpdateWeb+0x10>
  80018f6:	bf00      	nop
  80018f8:	2000014c 	.word	0x2000014c
- 80018fc:	0800c788 	.word	0x0800c788
+ 80018fc:	0800c77c 	.word	0x0800c77c
  8001900:	20000018 	.word	0x20000018
  8001904:	2000000c 	.word	0x2000000c
  8001908:	20000150 	.word	0x20000150
@@ -6058,7 +6058,7 @@ LoopFillZerobss:
   ldr r1, =_edata
  8002c64:	20000090 	.word	0x20000090
   ldr r2, =_sidata
- 8002c68:	0800d728 	.word	0x0800d728
+ 8002c68:	0800d71c 	.word	0x0800d71c
   ldr r2, =_sbss
  8002c6c:	20000090 	.word	0x20000090
   ldr r4, =_ebss
@@ -11008,7 +11008,7 @@ HAL_StatusTypeDef HAL_RCC_ClockConfig(RCC_ClkInitTypeDef  *RCC_ClkInitStruct, ui
  8004926:	bf00      	nop
  8004928:	40023c00 	.word	0x40023c00
  800492c:	40023800 	.word	0x40023800
- 8004930:	0800d6cc 	.word	0x0800d6cc
+ 8004930:	0800d6c0 	.word	0x0800d6c0
  8004934:	20000024 	.word	0x20000024
  8004938:	20000028 	.word	0x20000028
 
@@ -11056,7 +11056,7 @@ uint32_t HAL_RCC_GetPCLK1Freq(void)
  8004970:	4618      	mov	r0, r3
  8004972:	bd80      	pop	{r7, pc}
  8004974:	40023800 	.word	0x40023800
- 8004978:	0800d6dc 	.word	0x0800d6dc
+ 8004978:	0800d6d0 	.word	0x0800d6d0
 
 0800497c <HAL_RCC_GetPCLK2Freq>:
   * @note   Each time PCLK2 changes, this function must be called to update the
@@ -11082,7 +11082,7 @@ uint32_t HAL_RCC_GetPCLK2Freq(void)
  8004998:	4618      	mov	r0, r3
  800499a:	bd80      	pop	{r7, pc}
  800499c:	40023800 	.word	0x40023800
- 80049a0:	0800d6dc 	.word	0x0800d6dc
+ 80049a0:	0800d6d0 	.word	0x0800d6d0
 
 080049a4 <HAL_RCC_GetClockConfig>:
   * will be configured.
@@ -24401,7 +24401,7 @@ BaseType_t xReturn;
  80095c2:	46bd      	mov	sp, r7
  80095c4:	bd80      	pop	{r7, pc}
  80095c6:	bf00      	nop
- 80095c8:	0800c7bc 	.word	0x0800c7bc
+ 80095c8:	0800c7b0 	.word	0x0800c7b0
  80095cc:	08009c01 	.word	0x08009c01
  80095d0:	20001348 	.word	0x20001348
  80095d4:	20001344 	.word	0x20001344
@@ -26726,7 +26726,7 @@ BaseType_t xReturn = pdFAIL;
  800a210:	bd80      	pop	{r7, pc}
  800a212:	bf00      	nop
  800a214:	20001380 	.word	0x20001380
- 800a218:	0800c7c4 	.word	0x0800c7c4
+ 800a218:	0800c7b8 	.word	0x0800c7b8
  800a21c:	0800a35d 	.word	0x0800a35d
  800a220:	20001384 	.word	0x20001384
 
@@ -27835,7 +27835,7 @@ static void prvCheckForValidListAndQueue( void )
  800a834:	2000137c 	.word	0x2000137c
  800a838:	2000142c 	.word	0x2000142c
  800a83c:	2000138c 	.word	0x2000138c
- 800a840:	0800c7cc 	.word	0x0800c7cc
+ 800a840:	0800c7c0 	.word	0x0800c7c0
 
 0800a844 <pxPortInitialiseStack>:
 
@@ -29716,10 +29716,10 @@ uint8_t *puc;
  800b3e6:	4798      	blx	r3
  800b3e8:	3601      	adds	r6, #1
  800b3ea:	e7f2      	b.n	800b3d2 <__libc_init_array+0x1e>
- 800b3ec:	0800d720 	.word	0x0800d720
- 800b3f0:	0800d720 	.word	0x0800d720
- 800b3f4:	0800d720 	.word	0x0800d720
- 800b3f8:	0800d724 	.word	0x0800d724
+ 800b3ec:	0800d714 	.word	0x0800d714
+ 800b3f0:	0800d714 	.word	0x0800d714
+ 800b3f4:	0800d714 	.word	0x0800d714
+ 800b3f8:	0800d718 	.word	0x0800d718
 
 0800b3fc <__retarget_lock_init_recursive>:
  800b3fc:	4770      	bx	lr
@@ -30017,11 +30017,11 @@ uint8_t *puc;
  800b6b0:	4638      	mov	r0, r7
  800b6b2:	f000 fa5d 	bl	800bb70 <_printf_i>
  800b6b6:	e7ed      	b.n	800b694 <_svfiprintf_r+0x1c0>
- 800b6b8:	0800d6e4 	.word	0x0800d6e4
- 800b6bc:	0800d6ee 	.word	0x0800d6ee
+ 800b6b8:	0800d6d8 	.word	0x0800d6d8
+ 800b6bc:	0800d6e2 	.word	0x0800d6e2
  800b6c0:	00000000 	.word	0x00000000
  800b6c4:	0800b41f 	.word	0x0800b41f
- 800b6c8:	0800d6ea 	.word	0x0800d6ea
+ 800b6c8:	0800d6de 	.word	0x0800d6de
 
 0800b6cc <__sfputc_r>:
  800b6cc:	6893      	ldr	r3, [r2, #8]
@@ -30287,11 +30287,11 @@ uint8_t *puc;
  800b934:	4630      	mov	r0, r6
  800b936:	f000 f91b 	bl	800bb70 <_printf_i>
  800b93a:	e7e4      	b.n	800b906 <_vfiprintf_r+0x1e6>
- 800b93c:	0800d6e4 	.word	0x0800d6e4
- 800b940:	0800d6ee 	.word	0x0800d6ee
+ 800b93c:	0800d6d8 	.word	0x0800d6d8
+ 800b940:	0800d6e2 	.word	0x0800d6e2
  800b944:	00000000 	.word	0x00000000
  800b948:	0800b6fb 	.word	0x0800b6fb
- 800b94c:	0800d6ea 	.word	0x0800d6ea
+ 800b94c:	0800d6de 	.word	0x0800d6de
 
 0800b950 <sbrk_aligned>:
  800b950:	b570      	push	{r4, r5, r6, lr}
@@ -30762,8 +30762,8 @@ uint8_t *puc;
  800bda0:	f104 0619 	add.w	r6, r4, #25
  800bda4:	e7f5      	b.n	800bd92 <_printf_i+0x222>
  800bda6:	bf00      	nop
- 800bda8:	0800d6f5 	.word	0x0800d6f5
- 800bdac:	0800d706 	.word	0x0800d706
+ 800bda8:	0800d6e9 	.word	0x0800d6e9
+ 800bdac:	0800d6fa 	.word	0x0800d6fa
 
 0800bdb0 <__sflush_r>:
  800bdb0:	f9b1 200c 	ldrsh.w	r2, [r1, #12]
