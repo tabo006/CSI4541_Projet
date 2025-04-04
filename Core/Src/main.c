@@ -335,13 +335,13 @@ void StartTaskDistance(void *argument) {
 		 sprintf(buffer, "%d cm", Distance);
 		 SSD1306_Puts(buffer, &Font_11x18, 1);
 		 SSD1306_UpdateScreen();
-
-		 if(system_state == SYSTEM_ON && Distance < 30){
+		 printf(Distance);
+		 if(system_state == SYSTEM_ON && Distance < 5){
 			 alarm_state = ALARM_ON;
 		 }
 
 		 if(alarm_state == ALARM_OFF){
-			 osDelay(200);
+			 osDelay(2000);
 		 }
 		 osDelay(500);  // Delay to avoid excessive updates
 		}
